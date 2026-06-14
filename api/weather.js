@@ -1,5 +1,7 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
 
   const { nx, ny } = req.query;
   if (!nx || !ny) return res.status(400).json({ error: 'nx, ny 필요' });
