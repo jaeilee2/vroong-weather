@@ -111,8 +111,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="stat"><div class="stat-val" id="w-pty">--</div><div class="stat-label">강수형태</div></div>
     </div>
     <div class="link-section">
-      <button class="link-btn cctv" onclick="window.open('https://its.go.kr/map/cctv','_blank')">📹 CCTV 지도</button>
-      <button class="link-btn radar" onclick="window.open('https://www.weather.go.kr/w/image/radar.do','_blank')">🌧 레이더 지도</button>
+      <button class="link-btn cctv" onclick="openCctv()">📹 CCTV 지도</button>
+      <button class="link-btn radar" onclick="openRadar()">🌧 레이더 지도</button>
     </div>
     <div class="footer" id="w-footer">기상청 초단기실황 · 10분 자동 갱신</div>
   </div>
@@ -120,19 +120,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <script>
 const REGIONS = {
-  '강남동부': {nx:61,ny:126,team:'LX1'},
-  '강남서부': {nx:59,ny:125,team:'LX1'},
-  '강북동부': {nx:61,ny:128,team:'LX1'},
-  '강북서부': {nx:58,ny:128,team:'LX1'},
-  '경기서부': {nx:54,ny:124,team:'LX2'},
-  '경기남부': {nx:60,ny:121,team:'LX2'},
-  '경기북부': {nx:57,ny:130,team:'LX2'},
-  '강원충북': {nx:69,ny:107,team:'LX3'},
-  '대전충남': {nx:67,ny:100,team:'LX3'},
-  '광주전라': {nx:58,ny:74, team:'LX3'},
-  '부경동부': {nx:98,ny:76, team:'LX4'},
-  '부경서부': {nx:90,ny:77, team:'LX4'},
-  '대구경북': {nx:89,ny:91, team:'LX4'},
+  '강남동부': {nx:61,ny:126,team:'LX1',lat:37.5172,lon:127.0473},
+  '강남서부': {nx:59,ny:125,team:'LX1',lat:37.4979,lon:126.9834},
+  '강북동부': {nx:61,ny:128,team:'LX1',lat:37.5614,lon:127.0368},
+  '강북서부': {nx:58,ny:128,team:'LX1',lat:37.5683,lon:126.9389},
+  '경기서부': {nx:54,ny:124,team:'LX2',lat:37.4563,lon:126.7052},
+  '경기남부': {nx:60,ny:121,team:'LX2',lat:37.2636,lon:127.0286},
+  '경기북부': {nx:57,ny:130,team:'LX2',lat:37.6583,lon:126.8320},
+  '강원충북': {nx:69,ny:107,team:'LX3',lat:36.6424,lon:127.4890},
+  '대전충남': {nx:67,ny:100,team:'LX3',lat:36.3504,lon:127.3845},
+  '광주전라': {nx:58,ny:74, team:'LX3',lat:35.1595,lon:126.8526},
+  '부경동부': {nx:98,ny:76, team:'LX4',lat:35.1796,lon:129.0756},
+  '부경서부': {nx:90,ny:77, team:'LX4',lat:35.2279,lon:128.6811},
+  '대구경북': {nx:89,ny:91, team:'LX4',lat:35.8714,lon:128.6014},
 };
 const TEAM_NAMES = {LX1:'LX1팀 — 서울',LX2:'LX2팀 — 경기',LX3:'LX3팀 — 강원·충청·전라',LX4:'LX4팀 — 부산·경남·대구'};
 const PTY_LABEL  = {0:'없음',1:'비',2:'비/눈',3:'눈',5:'빗방울',6:'빗방울·눈날림',7:'눈날림'};
@@ -271,6 +271,16 @@ async function loadDetail(name){
     document.getElementById('w-badge-status').textContent = '데이터 오류';
     document.getElementById('w-badge-desc').textContent   = e.message;
   }
+}
+
+function openCctv(){
+  const r = REGIONS[document.getElementById('w-region').textContent];
+  if(r) window.open(`https://map.naver.com/v5/?c=${r.lon},${r.lat},14,0,0,0,dh`,'_blank');
+}
+function openRadar(){
+  const r = REGIONS[document.getElementById('w-region').textContent];
+  if(r) window.open(`https://www.weather.go.kr/w/image/radar.do#loc=${r.lat},${r.lon},8`,'_blank');
+  else window.open('https://www.weather.go.kr/w/image/radar.do','_blank');
 }
 
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
