@@ -12,87 +12,57 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0B0F14;color:#E2E8F0;min-height:100vh;min-height:100dvh}
-
-/* ── 권역 선택 화면 ── */
-#screen-select{padding:24px 20px}
-.select-header{margin-bottom:24px}
-.select-header h1{font-size:22px;font-weight:500;margin-bottom:4px}
-.select-header p{font-size:14px;color:#64748B}
-.team-label{font-size:11px;color:#4A5568;font-weight:500;margin:16px 0 8px;letter-spacing:.03em}
-.region-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
-.region-btn{background:#141921;border:1px solid #1E2A38;border-radius:12px;padding:14px 16px;text-align:left;cursor:pointer;transition:background .15s}
-.region-btn:active{background:#1E2A38}
-.region-btn .name{font-size:15px;font-weight:500;color:#E2E8F0}
-.region-btn .team{font-size:11px;color:#4A5568;margin-top:2px}
-
-/* ── 날씨 메인 화면 ── */
+#screen-select{padding:20px 20px 40px;display:none}
+.select-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.select-header h1{font-size:18px;font-weight:500}
+.refresh-btn{font-size:11px;color:#4A5568;background:none;border:1px solid #1E2A38;border-radius:8px;padding:5px 10px;cursor:pointer}
+.summary-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:20px}
+.summary-card{background:#141921;border:1px solid #1E2A38;border-radius:10px;padding:10px;text-align:center}
+.summary-val{font-size:22px;font-weight:500}
+.summary-val.on{color:#F97316}.summary-val.off{color:#05CD82}.summary-val.loading{color:#4A5568}
+.summary-label{font-size:10px;color:#4A5568;margin-top:2px}
+.team-section{margin-bottom:20px}
+.team-label{font-size:11px;color:#4A5568;font-weight:500;margin-bottom:8px}
+.region-list{display:flex;flex-direction:column;gap:6px}
+.region-card{background:#141921;border:1px solid #1E2A38;border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:12px}
+.region-card:active{background:#1E2A38}
+.region-card.on{background:#1A0F05;border-color:rgba(249,115,22,.25)}
+.region-left{flex:1;min-width:0}
+.region-name{font-size:15px;font-weight:500;margin-bottom:4px}
+.region-status{font-size:12px;font-weight:500}
+.region-status.on{color:#F97316}.region-status.off{color:#05CD82}.region-status.loading{color:#4A5568}
+.region-right{text-align:right;flex-shrink:0}
+.region-temp{font-size:20px;font-weight:300;color:#fff;line-height:1}
+.region-precip{font-size:11px;color:#4A5568;margin-top:3px}
+.region-precip.wet{color:#60A5FA}
 #screen-weather{display:none;padding:0;min-height:100vh;min-height:100dvh}
 .weather-inner{padding:20px 20px 40px}
-
 .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.region-name{font-size:18px;font-weight:500}
-.change-btn{font-size:12px;color:#4A5568;background:none;border:1px solid #1E2A38;border-radius:8px;padding:5px 10px;cursor:pointer}
-
-/* 할증 배지 */
+.region-title{font-size:18px;font-weight:500}
+.back-btn{font-size:11px;color:#4A5568;background:none;border:1px solid #1E2A38;border-radius:8px;padding:5px 10px;cursor:pointer}
 .surcharge-badge{border-radius:14px;padding:16px 18px;margin-bottom:16px;border:1px solid transparent}
-.surcharge-badge.on{background:#2A1A0A;border-color:rgba(249,115,22,.3)}
-.surcharge-badge.warn{background:#0A1A2A;border-color:rgba(96,165,250,.25)}
-.surcharge-badge.off{background:#0A2A1A;border-color:rgba(5,205,130,.2)}
+.badge-on{background:#2A1A0A;border-color:rgba(249,115,22,.3)}
+.badge-off{background:#0A2A1A;border-color:rgba(5,205,130,.2)}
 .badge-status{font-size:18px;font-weight:500;margin-bottom:4px}
-.badge-on .badge-status{color:#F97316}
-.badge-warn .badge-status{color:#60A5FA}
-.badge-off .badge-status{color:#05CD82}
+.badge-on .badge-status{color:#F97316}.badge-off .badge-status{color:#05CD82}
 .badge-desc{font-size:13px;opacity:.8}
-.badge-on .badge-desc{color:#F97316}
-.badge-warn .badge-desc{color:#60A5FA}
-.badge-off .badge-desc{color:#05CD82}
-
-/* 기온 */
+.badge-on .badge-desc{color:#F97316}.badge-off .badge-desc{color:#05CD82}
 .temp-row{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
 .temp-val{font-size:48px;font-weight:300;line-height:1;color:#fff}
-.temp-right{text-align:right}
 .precip-now{font-size:14px;font-weight:500}
-.precip-now.wet{color:#60A5FA}
-.precip-now.dry{color:#4A5568}
+.precip-now.wet{color:#60A5FA}.precip-now.dry{color:#4A5568}
 .apparent{font-size:12px;color:#4A5568;margin-top:3px}
-
-/* 스탯 */
 .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:#1E2A38;border-radius:12px;overflow:hidden;margin-bottom:16px}
 .stat{background:#141921;padding:12px 10px;text-align:center}
 .stat-val{font-size:15px;font-weight:500}
 .stat-label{font-size:10px;color:#4A5568;margin-top:2px}
-
-/* AI 섹션 */
-.ai-section{background:#141921;border:1px solid #1E2A38;border-radius:14px;padding:16px;margin-bottom:16px}
-.ai-title{font-size:14px;font-weight:500;margin-bottom:12px;color:#E2E8F0}
-.ai-input{width:100%;background:#0B0F14;border:1px solid #1E2A38;border-radius:8px;padding:10px 12px;font-size:13px;color:#E2E8F0;outline:none;font-family:inherit}
-.ai-input::placeholder{color:#4A5568}
-.ai-input:focus{border-color:#3A4A5C}
-.ai-row{display:flex;gap:8px;margin-top:8px}
-.btn-analyze{flex:1;background:#1E3A2A;border:1px solid rgba(5,205,130,.25);border-radius:8px;padding:10px;font-size:13px;font-weight:500;color:#05CD82;cursor:pointer;font-family:inherit}
-.btn-analyze:active{opacity:.7}
-.btn-open{background:#141921;border:1px solid #1E2A38;border-radius:8px;padding:10px 14px;font-size:13px;color:#4A5568;cursor:pointer;font-family:inherit}
-.ai-result{margin-top:12px;padding:12px;border-radius:10px;display:none}
-.ai-result.wet{background:#2A1A0A;border:1px solid rgba(249,115,22,.25)}
-.ai-result.dry{background:#0A2A1A;border:1px solid rgba(5,205,130,.2)}
-.ai-result.analyzing{background:#1E2A38}
-.ai-result-title{font-size:14px;font-weight:500;margin-bottom:3px}
-.ai-result.wet .ai-result-title{color:#F97316}
-.ai-result.dry .ai-result-title{color:#05CD82}
-.ai-result.analyzing .ai-result-title{color:#60A5FA}
-.ai-result-reason{font-size:12px;opacity:.8}
-.ai-result.wet .ai-result-reason{color:#F97316}
-.ai-result.dry .ai-result-reason{color:#05CD82}
-.ai-result.analyzing .ai-result-reason{color:#60A5FA}
-
-/* 푸터 */
+.link-section{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.link-btn{padding:12px;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;border:1px solid transparent;text-align:center}
+.link-btn.cctv{background:#0A1A2A;border-color:rgba(96,165,250,.25);color:#60A5FA}
+.link-btn.radar{background:#0A2A1A;border-color:rgba(5,205,130,.2);color:#05CD82}
 .footer{font-size:11px;color:#2A3545;text-align:center;margin-top:8px}
-
-/* 로딩 */
 #screen-loading{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px}
-.loading-icon{font-size:48px}
-.loading-text{font-size:14px;color:#4A5568}
-
+.loading-icon{font-size:48px}.loading-text{font-size:14px;color:#4A5568}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .pulsing{animation:pulse 1.5s ease-in-out infinite}
 </style>
@@ -101,73 +71,54 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <div id="screen-loading">
   <div class="loading-icon pulsing">🌧</div>
-  <div class="loading-text">불러오는 중...</div>
+  <div class="loading-text">날씨 불러오는 중...</div>
 </div>
 
-<div id="screen-select" style="display:none">
+<div id="screen-select">
   <div class="select-header">
-    <h1>내 권역 선택</h1>
-    <p>담당 권역을 선택하면 날씨를 바로 확인할 수 있어요</p>
+    <h1>전국 기상할증 현황</h1>
+    <button class="refresh-btn" onclick="loadSelectScreen()">↻ 새로고침</button>
   </div>
-  <div id="region-list"></div>
+  <div class="summary-row">
+    <div class="summary-card"><div class="summary-val on" id="cnt-on">-</div><div class="summary-label">할증 ON</div></div>
+    <div class="summary-card"><div class="summary-val loading" id="cnt-loading">-</div><div class="summary-label">로딩 중</div></div>
+    <div class="summary-card"><div class="summary-val off" id="cnt-off">-</div><div class="summary-label">할증 OFF</div></div>
+  </div>
+  <div id="region-sections"></div>
+  <div class="footer" id="select-footer"></div>
 </div>
 
 <div id="screen-weather">
   <div class="weather-inner">
     <div class="top-bar">
-      <div class="region-name" id="w-region"></div>
-      <button class="change-btn" onclick="changeRegion()">권역 변경</button>
+      <div class="region-title" id="w-region"></div>
+      <button class="back-btn" onclick="backToSelect()">← 전체 보기</button>
     </div>
-
     <div class="surcharge-badge" id="w-badge">
       <div class="badge-status" id="w-badge-status">불러오는 중...</div>
       <div class="badge-desc" id="w-badge-desc"></div>
     </div>
-
     <div class="temp-row">
       <div class="temp-val" id="w-temp">--°</div>
-      <div class="temp-right">
+      <div style="text-align:right">
         <div class="precip-now" id="w-precip">--</div>
         <div class="apparent" id="w-apparent">--</div>
       </div>
     </div>
-
     <div class="stats">
-      <div class="stat">
-        <div class="stat-val" id="w-humid">--%</div>
-        <div class="stat-label">습도</div>
-      </div>
-      <div class="stat">
-        <div class="stat-val" id="w-wind">--</div>
-        <div class="stat-label">풍속</div>
-      </div>
-      <div class="stat">
-        <div class="stat-val" id="w-pty">--</div>
-        <div class="stat-label">강수형태</div>
-      </div>
+      <div class="stat"><div class="stat-val" id="w-humid">--%</div><div class="stat-label">습도</div></div>
+      <div class="stat"><div class="stat-val" id="w-wind">--</div><div class="stat-label">풍속</div></div>
+      <div class="stat"><div class="stat-val" id="w-pty">--</div><div class="stat-label">강수형태</div></div>
     </div>
-
-    <div class="ai-section">
-      <div class="ai-title">📷 AI 노면 분석 (선택)</div>
-      <input class="ai-input" id="ai-url" type="url" placeholder="CCTV 이미지 URL 붙여넣기...">
-      <div class="ai-row">
-        <button class="btn-analyze" id="btn-analyze" onclick="analyzeRoad()">AI 노면 분석하기</button>
-        <button class="btn-open" onclick="openUrl()">열기</button>
-      </div>
-      <div class="ai-result" id="ai-result">
-        <div class="ai-result-title" id="ai-result-title"></div>
-        <div class="ai-result-reason" id="ai-result-reason"></div>
-      </div>
+    <div class="link-section">
+      <button class="link-btn cctv" onclick="window.open('https://its.go.kr/map/cctv','_blank')">📹 CCTV 지도</button>
+      <button class="link-btn radar" onclick="window.open('https://www.weather.go.kr/w/image/radar.do','_blank')">🌧 레이더 지도</button>
     </div>
-
     <div class="footer" id="w-footer">기상청 초단기실황 · 10분 자동 갱신</div>
   </div>
 </div>
 
 <script>
-const KMA_KEY       = '41aff7daa81f0efeca9af5f3f47d00259916fecf00fcca5c8f647e72736d5b69';
-const ANTHROPIC_KEY = '여기에_Anthropic_API_키_입력';
-
 const REGIONS = {
   '강남동부': {nx:61,ny:126,team:'LX1'},
   '강남서부': {nx:59,ny:125,team:'LX1'},
@@ -183,181 +134,147 @@ const REGIONS = {
   '부경서부': {nx:90,ny:77, team:'LX4'},
   '대구경북': {nx:89,ny:91, team:'LX4'},
 };
+const TEAM_NAMES = {LX1:'LX1팀 — 서울',LX2:'LX2팀 — 경기',LX3:'LX3팀 — 강원·충청·전라',LX4:'LX4팀 — 부산·경남·대구'};
+const PTY_LABEL  = {0:'없음',1:'비',2:'비/눈',3:'눈',5:'빗방울',6:'빗방울·눈날림',7:'눈날림'};
+const RAIN_PTY   = new Set([1,2,5,6,3,7]);
 
-const PTY_LABEL = {0:'없음',1:'비',2:'비/눈',3:'눈',5:'빗방울',6:'빗방울·눈날림',7:'눈날림'};
-const RAIN_PTY  = new Set([1,2,5,6,3,7]);
-
-let currentRegion = null;
-let refreshTimer  = null;
+let weatherTimer = null;
+let cntOn=0, cntLoading=0, cntOff=0;
 
 function show(id){
-  ['screen-loading','screen-select','screen-weather'].forEach(s=>{
-    document.getElementById(s).style.display = s===id ? 'block' : 'none';
+  ['screen-loading','screen-select','screen-weather']
+    .forEach(s=>{ document.getElementById(s).style.display = s===id?'block':'none'; });
+}
+
+async function fetchKMA(nx, ny){
+  const res  = await fetch(`/api/weather?nx=${nx}&ny=${ny}`);
+  const data = await res.json();
+  const obs  = {};
+  data.response.body.items.item.forEach(i => obs[i.category] = i.obsrValue);
+  const pty   = parseInt(obs.PTY || 0);
+  const rn1   = obs.RN1 === '강수없음' ? 0 : parseFloat(obs.RN1 || 0);
+  const temp  = parseFloat(obs.T1H || 0);
+  const humid = parseFloat(obs.REH || 0);
+  const wind  = parseFloat(obs.WSD || 0);
+  const isRain = RAIN_PTY.has(pty) || rn1 > 0;
+  return { pty, rn1, temp, humid, wind, isRain, surge: isRain || temp <= -5 || temp >= 33 };
+}
+
+function buildCards(){
+  const teams = {};
+  Object.entries(REGIONS).forEach(([name,{team}]) => { if(!teams[team]) teams[team]=[]; teams[team].push(name); });
+  const el = document.getElementById('region-sections');
+  el.innerHTML = '';
+  Object.entries(teams).forEach(([team, parts]) => {
+    const sec = document.createElement('div');
+    sec.className = 'team-section';
+    sec.innerHTML = `<div class="team-label">${TEAM_NAMES[team]}</div><div class="region-list" id="list-${team}"></div>`;
+    el.appendChild(sec);
+    parts.forEach(name => {
+      const card = document.createElement('div');
+      card.className = 'region-card';
+      card.id = `card-${name}`;
+      card.innerHTML = `
+        <div class="region-left">
+          <div class="region-name">${name}</div>
+          <div class="region-status loading" id="status-${name}">불러오는 중...</div>
+        </div>
+        <div class="region-right">
+          <div class="region-temp" id="temp-${name}">--°</div>
+          <div class="region-precip" id="precip-${name}">--</div>
+        </div>`;
+      card.onclick = () => selectRegion(name);
+      document.getElementById(`list-${team}`).appendChild(card);
+    });
   });
 }
 
-function buildRegionList(){
-  const teams = {};
-  Object.entries(REGIONS).forEach(([name,{team}])=>{
-    if(!teams[team]) teams[team]=[];
-    teams[team].push(name);
-  });
-  const teamNames = {'LX1':'LX1팀 — 서울','LX2':'LX2팀 — 경기','LX3':'LX3팀 — 강원·충청·전라','LX4':'LX4팀 — 부산·경남·대구'};
-  const el = document.getElementById('region-list');
-  el.innerHTML = '';
-  Object.entries(teams).forEach(([team,parts])=>{
-    const label = document.createElement('div');
-    label.className = 'team-label';
-    label.textContent = teamNames[team];
-    el.appendChild(label);
-    const grid = document.createElement('div');
-    grid.className = 'region-grid';
-    parts.forEach(name=>{
-      const btn = document.createElement('button');
-      btn.className = 'region-btn';
-      btn.innerHTML = `<div class="name">${name}</div><div class="team">${team}</div>`;
-      btn.onclick = ()=>selectRegion(name);
-      grid.appendChild(btn);
-    });
-    el.appendChild(grid);
-  });
+function updateCard(name, d){
+  const card = document.getElementById(`card-${name}`);
+  const st   = document.getElementById(`status-${name}`);
+  const tm   = document.getElementById(`temp-${name}`);
+  const pr   = document.getElementById(`precip-${name}`);
+  if(!card) return;
+  card.className = 'region-card ' + (d.surge ? 'on' : '');
+  st.className   = 'region-status ' + (d.surge ? 'on' : 'off');
+  st.textContent = d.surge ? `⚠️ 할증 ON · ${PTY_LABEL[d.pty]||'강수'}` : `✅ 할증 OFF · ${PTY_LABEL[d.pty]||'없음'}`;
+  tm.textContent = `${Math.round(d.temp*10)/10}°`;
+  pr.textContent = d.isRain ? `${Math.round(d.rn1*10)/10}mm` : '건조';
+  pr.className   = 'region-precip' + (d.isRain ? ' wet' : '');
+}
+
+async function loadSelectScreen(){
+  cntOn=0; cntLoading=Object.keys(REGIONS).length; cntOff=0;
+  document.getElementById('cnt-on').textContent = '-';
+  document.getElementById('cnt-loading').textContent = cntLoading;
+  document.getElementById('cnt-off').textContent = '-';
+  buildCards();
+  show('screen-select');
+
+  await Promise.allSettled(Object.entries(REGIONS).map(async ([name,{nx,ny}]) => {
+    try{
+      const d = await fetchKMA(nx, ny);
+      updateCard(name, d);
+      if(d.surge) cntOn++; else cntOff++;
+    }catch{
+      const s = document.getElementById(`status-${name}`);
+      if(s){ s.textContent='오류'; s.className='region-status loading'; }
+      cntOff++;
+    }
+    cntLoading--;
+    document.getElementById('cnt-on').textContent = cntOn;
+    document.getElementById('cnt-loading').textContent = cntLoading;
+    document.getElementById('cnt-off').textContent = cntOff;
+  }));
+
+  const now = new Date();
+  document.getElementById('select-footer').textContent =
+    `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')} 기준 · 기상청 초단기실황`;
 }
 
 function selectRegion(name){
   localStorage.setItem('vroong_region', name);
-  currentRegion = name;
   document.getElementById('w-region').textContent = name;
   show('screen-weather');
-  fetchWeather();
-  if(refreshTimer) clearInterval(refreshTimer);
-  refreshTimer = setInterval(fetchWeather, 600000);
+  loadDetail(name);
+  if(weatherTimer) clearInterval(weatherTimer);
+  weatherTimer = setInterval(() => loadDetail(name), 600000);
 }
 
-function changeRegion(){
-  if(refreshTimer) clearInterval(refreshTimer);
+function backToSelect(){
+  if(weatherTimer) clearInterval(weatherTimer);
   show('screen-select');
 }
 
-function getBaseTime(){
-  const now = new Date(Date.now() - 10*60*1000);
-  const pad = n=>String(n).padStart(2,'0');
-  const d = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
-  const m = Math.floor(now.getMinutes()/10)*10;
-  const t = `${pad(now.getHours())}${pad(m)}`;
-  return {d,t};
-}
-
-async function fetchWeather(){
-  if(!currentRegion) return;
-  const {nx,ny} = REGIONS[currentRegion];
-  const {d,t} = getBaseTime();
-  const params = new URLSearchParams({
-    serviceKey: KMA_KEY, pageNo:'1', numOfRows:'1000',
-    dataType:'JSON', base_date:d, base_time:t,
-    nx:String(nx), ny:String(ny)
-  });
+async function loadDetail(name){
+  const {nx, ny} = REGIONS[name];
   try{
-    const res = await fetch(`https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst?${params}`);
-    const data = await res.json();
-    const obs = {};
-    data.response.body.items.item.forEach(i=>obs[i.category]=i.obsrValue);
-    const pty   = parseInt(obs.PTY||0);
-    const rn1   = obs.RN1==='강수없음'?0:parseFloat(obs.RN1||0);
-    const temp  = parseFloat(obs.T1H||0);
-    const humid = parseFloat(obs.REH||0);
-    const wind  = parseFloat(obs.WSD||0);
-    const appar = parseFloat(obs.T1H||0) - (wind*0.7);
-    const isRain = RAIN_PTY.has(pty)||rn1>0;
-    const surge  = isRain||temp<=-5||temp>=33;
-    updateWeatherUI({pty,rn1,temp,humid,wind,appar,isRain,surge,base:`${d.slice(4,6)}/${d.slice(6,8)} ${t.slice(0,2)}:${t.slice(2,4)}`});
+    const d = await fetchKMA(nx, ny);
+    const badge = document.getElementById('w-badge');
+    badge.className = 'surcharge-badge ' + (d.surge ? 'badge-on' : 'badge-off');
+    document.getElementById('w-badge-status').textContent = d.surge ? '⚠️  기상할증 ON' : '✅  기상할증 OFF';
+    document.getElementById('w-badge-desc').textContent   = d.surge
+      ? (d.isRain ? `현재 강수 감지 (${d.rn1}mm) — 할증 적용 권장` : `온도 기준 충족 (${d.temp}°C)`)
+      : '현재 강수 없음 · 할증 불필요';
+    document.getElementById('w-temp').textContent    = `${Math.round(d.temp*10)/10}°`;
+    const pel = document.getElementById('w-precip');
+    pel.textContent = d.isRain ? `${Math.round(d.rn1*10)/10}mm/h 강수 중` : '강수 없음';
+    pel.className   = 'precip-now ' + (d.isRain ? 'wet' : 'dry');
+    document.getElementById('w-apparent').textContent = `체감 ${Math.round((d.temp - d.wind * 0.7)*10)/10}°C`;
+    document.getElementById('w-humid').textContent   = `${Math.round(d.humid)}%`;
+    document.getElementById('w-wind').textContent    = `${Math.round(d.wind*10)/10}m/s`;
+    document.getElementById('w-pty').textContent     = PTY_LABEL[d.pty] || '없음';
+    const now = new Date();
+    document.getElementById('w-footer').textContent =
+      `기상청 초단기실황 · ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')} 업데이트`;
   }catch(e){
     document.getElementById('w-badge-status').textContent = '데이터 오류';
-    document.getElementById('w-badge-desc').textContent = e.message;
+    document.getElementById('w-badge-desc').textContent   = e.message;
   }
 }
 
-function updateWeatherUI({pty,rn1,temp,humid,wind,appar,isRain,surge,base}){
-  const badge = document.getElementById('w-badge');
-  badge.className = 'surcharge-badge badge-'+(surge?'on':'off');
-  document.getElementById('w-badge-status').textContent = surge?'⚠️  기상할증 ON':'✅  기상할증 OFF';
-  document.getElementById('w-badge-desc').textContent   = surge
-    ?(isRain?`현재 강수 감지 (${rn1}mm) — 할증 적용 권장`:`온도 기준 충족 (${temp}°C)`)
-    :'현재 강수 없음 · 할증 불필요';
-  document.getElementById('w-temp').textContent     = `${Math.round(temp*10)/10}°`;
-  const pel = document.getElementById('w-precip');
-  pel.textContent  = isRain?`${Math.round(rn1*10)/10}mm/h 강수 중`:'강수 없음';
-  pel.className    = 'precip-now '+(isRain?'wet':'dry');
-  document.getElementById('w-apparent').textContent = `체감 ${Math.round(appar*10)/10}°C`;
-  document.getElementById('w-humid').textContent    = `${Math.round(humid)}%`;
-  document.getElementById('w-wind').textContent     = `${Math.round(wind*10)/10}m/s`;
-  document.getElementById('w-pty').textContent      = PTY_LABEL[pty]||'없음';
-  document.getElementById('w-footer').textContent   = `기상청 실황 ${base} 기준 · 10분 자동 갱신`;
-}
-
-async function analyzeRoad(){
-  const url = document.getElementById('ai-url').value.trim();
-  if(!url||url==='https://...') return;
-  const btn = document.getElementById('btn-analyze');
-  const result = document.getElementById('ai-result');
-  btn.textContent = '분석 중...';
-  result.className='ai-result analyzing';
-  result.style.display='block';
-  document.getElementById('ai-result-title').textContent='Claude가 노면 분석 중...';
-  document.getElementById('ai-result-reason').textContent='잠시 기다려 주세요';
-  try{
-    const imgRes = await fetch(url);
-    const blob   = await imgRes.blob();
-    const b64    = await new Promise(r=>{
-      const rd=new FileReader();
-      rd.onload=()=>r(rd.result.split(',')[1]);
-      rd.readAsDataURL(blob);
-    });
-    const mt = blob.type||'image/jpeg';
-    const payload = {
-      model:'claude-sonnet-4-6',
-      max_tokens:200,
-      messages:[{role:'user',content:[
-        {type:'image',source:{type:'base64',media_type:mt,data:b64}},
-        {type:'text',text:'이 도로 노면 이미지를 분석하세요. 배달 라이더 기상할증 적용 판단용입니다. JSON만 답하세요:\n{"is_wet":true/false,"confidence":0-100,"reason":"한 문장"}'}
-      ]}]
-    };
-    const apiRes = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01'},
-      body:JSON.stringify(payload)
-    });
-    const data = await apiRes.json();
-    const raw  = data.content[0].text.replace(/```json|```/g,'').trim();
-    const ans  = JSON.parse(raw);
-    result.className='ai-result '+(ans.is_wet?'wet':'dry');
-    document.getElementById('ai-result-title').textContent =
-      ans.is_wet?`🌧 노면 젖음 감지 (${ans.confidence}% 확신)`:`✅ 노면 건조 (${ans.confidence}% 확신)`;
-    document.getElementById('ai-result-reason').textContent = ans.reason;
-  }catch(e){
-    result.className='ai-result analyzing';
-    document.getElementById('ai-result-title').textContent='분석 오류';
-    document.getElementById('ai-result-reason').textContent=e.message.slice(0,60);
-  }finally{
-    btn.textContent='AI 노면 분석하기';
-  }
-}
-
-function openUrl(){
-  const url = document.getElementById('ai-url').value.trim();
-  if(url) window.open(url,'_blank');
-}
-
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
-}
-
-buildRegionList();
-const saved = localStorage.getItem('vroong_region');
-if(saved && REGIONS[saved]){
-  selectRegion(saved);
-}else{
-  show('screen-select');
-}
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+loadSelectScreen();
 </script>
 </body>
 </html>
