@@ -11,16 +11,14 @@ export default async function handler(req, res) {
   const m = Math.floor(now.getMinutes() / 10) * 10;
   const base_time = `${pad(now.getHours())}${pad(m)}`;
 
-  const params = new URLSearchParams({
-    serviceKey: KMA_KEY,
-    pageNo: '1', numOfRows: '1000', dataType: 'JSON',
-    base_date, base_time, nx, ny,
-  });
+  const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst`
+    + `?serviceKey=${KMA_KEY}`
+    + `&pageNo=1&numOfRows=1000&dataType=JSON`
+    + `&base_date=${base_date}&base_time=${base_time}`
+    + `&nx=${nx}&ny=${ny}`;
 
   try {
-    const apiRes = await fetch(
-      `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst?${params}`
-    );
+    const apiRes = await fetch(url);
     const data = await apiRes.json();
     res.status(200).json(data);
   } catch (e) {
