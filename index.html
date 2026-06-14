@@ -1,269 +1,230 @@
-#!/usr/bin/env python3
-"""
-기상할증 알리미 — 데스크톱 위젯
-실행: python3 weather_widget_gui.py
-종료: 우클릭
-"""
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>기상할증 지도</title>
+<meta name="theme-color" content="#12161E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="기상할증">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#12161E;font-family:-apple-system,BlinkMacSystemFont,sans-serif;overflow:hidden}
+#map{width:100vw;height:100vh}
 
-import tkinter as tk
-from tkinter import font as tkfont
-import json, urllib.request, threading, time, subprocess, os
-from datetime import datetime
+.leaflet-container{background:#0B0F14}
 
-# ── 권역 목록 ──────────────────────────────────────────────
-REGIONS = {
-    '강남동부': (37.5172, 127.0473), '강남서부': (37.4979, 126.9834),
-    '강북동부': (37.5614, 127.0368), '강북서부': (37.5683, 126.9389),
-    '경기서부': (37.4563, 126.7052), '경기남부': (37.2636, 127.0286),
-    '경기북부': (37.6583, 126.8320), '강원충북': (36.6424, 127.4890),
-    '대전충남': (36.3504, 127.3845), '광주전라': (35.1595, 126.8526),
-    '부경동부': (35.1796, 129.0756), '부경서부': (35.2279, 128.6811),
-    '대구경북': (35.8714, 128.6014),
+/* 상단 헤더 */
+#header{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(18,22,30,.92);border-bottom:1px solid #1E2A38;padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
+#header h1{font-size:15px;font-weight:500;color:#E2E8F0}
+#header-right{display:flex;align-items:center;gap:10px}
+#update-time{font-size:11px;color:#4A5568}
+#refresh-btn{font-size:11px;color:#4A5568;background:none;border:1px solid #1E2A38;border-radius:7px;padding:4px 10px;cursor:pointer;color:#E2E8F0}
+
+/* 범례 */
+#legend{position:fixed;bottom:100px;right:12px;z-index:1000;background:rgba(18,22,30,.9);border:1px solid #1E2A38;border-radius:10px;padding:10px 12px}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:11px;color:#8B95A1;margin-bottom:5px}
+.legend-item:last-child{margin-bottom:0}
+.legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+
+/* 하단 팝업 */
+#popup{position:fixed;bottom:0;left:0;right:0;z-index:1000;background:#141921;border-top:1px solid #1E2A38;border-radius:20px 20px 0 0;padding:20px;transform:translateY(100%);transition:transform .3s ease;max-height:60vh;overflow-y:auto}
+#popup.open{transform:translateY(0)}
+#popup-close{position:absolute;top:14px;right:16px;background:none;border:none;color:#4A5568;font-size:20px;cursor:pointer;line-height:1}
+#popup-region{font-size:18px;font-weight:500;color:#E2E8F0;margin-bottom:14px}
+
+.popup-badge{border-radius:12px;padding:14px 16px;margin-bottom:14px;border:1px solid transparent}
+.popup-badge.on{background:#2A1A0A;border-color:rgba(249,115,22,.3)}
+.popup-badge.off{background:#0A2A1A;border-color:rgba(5,205,130,.2)}
+.popup-badge-title{font-size:17px;font-weight:500;margin-bottom:3px}
+.popup-badge.on .popup-badge-title{color:#F97316}
+.popup-badge.off .popup-badge-title{color:#05CD82}
+.popup-badge-desc{font-size:12px;opacity:.8}
+.popup-badge.on .popup-badge-desc{color:#F97316}
+.popup-badge.off .popup-badge-desc{color:#05CD82}
+
+.popup-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.popup-num{background:#0B0F14;border-radius:10px;padding:12px 8px;text-align:center}
+.popup-num-val{font-size:16px;font-weight:500;color:#E2E8F0}
+.popup-num-label{font-size:10px;color:#4A5568;margin-top:3px}
+
+.popup-links{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.popup-link{padding:11px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;text-align:center;border:1px solid transparent}
+.popup-link.cctv{background:#0A1A2A;border-color:rgba(96,165,250,.25);color:#60A5FA}
+.popup-link.radar{background:#0A2A1A;border-color:rgba(5,205,130,.2);color:#05CD82}
+
+/* 로딩 오버레이 */
+#loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2000;text-align:center;color:#4A5568}
+#loading.done{display:none}
+.spin{font-size:36px;display:block;margin-bottom:10px;animation:spin 2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>🌧 기상할증 지도</h1>
+  <div id="header-right">
+    <span id="update-time">불러오는 중...</span>
+    <button id="refresh-btn" onclick="loadAll()">↻ 새로고침</button>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<div id="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:rgba(249,115,22,.7)"></div>할증 ON (강수)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:rgba(5,205,130,.5)"></div>할증 OFF (건조)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:rgba(100,116,139,.4)"></div>로딩 중</div>
+</div>
+
+<div id="popup">
+  <button id="popup-close" onclick="closePopup()">×</button>
+  <div id="popup-region">--</div>
+  <div class="popup-badge" id="popup-badge">
+    <div class="popup-badge-title" id="popup-badge-title">--</div>
+    <div class="popup-badge-desc" id="popup-badge-desc">--</div>
+  </div>
+  <div class="popup-nums">
+    <div class="popup-num"><div class="popup-num-val" id="p-temp">--°</div><div class="popup-num-label">기온</div></div>
+    <div class="popup-num"><div class="popup-num-val" id="p-precip">--</div><div class="popup-num-label">강수량</div></div>
+    <div class="popup-num"><div class="popup-num-val" id="p-humid">--%</div><div class="popup-num-label">습도</div></div>
+  </div>
+  <div class="popup-links">
+    <button class="popup-link cctv" onclick="window.open('https://its.go.kr/map/cctv','_blank')">📹 CCTV 지도</button>
+    <button class="popup-link radar" onclick="window.open('https://www.weather.go.kr/w/image/radar.do','_blank')">🌧 레이더</button>
+  </div>
+</div>
+
+<div id="loading">
+  <span class="spin">🌧</span>
+  <div style="font-size:14px">날씨 불러오는 중...</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const REGIONS = {
+  '강남동부': { lat:37.5172, lon:127.0473, bounds:[[37.497,126.998],[37.533,127.077]] },
+  '강남서부': { lat:37.4979, lon:126.9834, bounds:[[37.477,126.921],[37.523,127.000]] },
+  '강북동부': { lat:37.5614, lon:127.0368, bounds:[[37.533,126.980],[37.590,127.075]] },
+  '강북서부': { lat:37.5683, lon:126.9389, bounds:[[37.533,126.887],[37.597,126.983]] },
+  '경기서부': { lat:37.4563, lon:126.7052, bounds:[[37.350,126.580],[37.540,126.800]] },
+  '경기남부': { lat:37.2636, lon:127.0286, bounds:[[37.130,126.880],[37.420,127.200]] },
+  '경기북부': { lat:37.6583, lon:126.8320, bounds:[[37.590,126.700],[37.820,127.100]] },
+  '강원충북': { lat:36.6424, lon:127.8000, bounds:[[36.480,127.300],[37.180,128.900]] },
+  '대전충남': { lat:36.3504, lon:127.1000, bounds:[[35.950,126.400],[36.700,127.600]] },
+  '광주전라': { lat:35.1595, lon:126.8500, bounds:[[34.650,126.200],[35.530,127.400]] },
+  '부경동부': { lat:35.3000, lon:129.050, bounds:[[35.050,128.800],[35.620,129.450]] },
+  '부경서부': { lat:35.2279, lon:128.300, bounds:[[34.850,127.800],[35.580,128.850]] },
+  '대구경북': { lat:35.8714, lon:128.601, bounds:[[35.500,127.800],[36.750,129.300]] },
+};
+
+const RAIN_CODES = new Set([51,53,55,56,57,61,63,65,66,67,71,73,75,77,80,81,82,85,86,95,96,99]);
+const CODE_LABELS = {0:'맑음',1:'대체로 맑음',2:'구름 많음',3:'흐림',45:'안개',48:'안개',51:'이슬비',53:'이슬비',55:'이슬비',61:'비',63:'비',65:'강한 비',71:'눈',73:'눈',75:'강한 눈',80:'소나기',81:'소나기',82:'강한 소나기',95:'뇌우',96:'뇌우',99:'강한 뇌우'};
+
+const map = L.map('map', {
+  center:[36.5,128.0], zoom:7,
+  zoomControl:false, attributionControl:false
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  subdomains:'abcd', maxZoom:19
+}).addTo(map);
+
+L.control.zoom({position:'topright'}).addTo(map);
+
+const layers = {};
+const weatherCache = {};
+
+function getColor(state){
+  if(state==='on')      return {fill:'rgba(249,115,22,.55)', stroke:'rgba(249,115,22,.9)'};
+  if(state==='off')     return {fill:'rgba(5,205,130,.35)',  stroke:'rgba(5,205,130,.7)'};
+  return {fill:'rgba(100,116,139,.25)', stroke:'rgba(100,116,139,.5)'};
 }
-RAIN_CODES = {51,53,55,56,57,61,63,65,66,67,71,73,75,77,80,81,82,85,86,95,96,99}
-CODE_LABELS = {
-    0:'맑음',1:'대체로 맑음',2:'구름 많음',3:'흐림',
-    45:'안개',48:'안개',51:'이슬비',53:'이슬비',55:'강한 이슬비',
-    61:'비',63:'비',65:'강한 비',71:'눈',73:'눈',75:'강한 눈',
-    80:'소나기',81:'소나기',82:'강한 소나기',95:'뇌우',96:'뇌우',99:'강한 뇌우',
+
+function buildLayers(){
+  Object.entries(REGIONS).forEach(([name, r])=>{
+    const {fill, stroke} = getColor('loading');
+    const rect = L.rectangle(r.bounds, {
+      color: stroke, weight:1.5, fillColor:fill, fillOpacity:1
+    }).addTo(map);
+
+    const center = [(r.bounds[0][0]+r.bounds[1][0])/2, (r.bounds[0][1]+r.bounds[1][1])/2];
+    const label = L.divIcon({
+      html:`<div style="color:#E2E8F0;font-size:11px;font-weight:500;font-family:-apple-system,sans-serif;text-shadow:0 1px 3px rgba(0,0,0,.8);white-space:nowrap;text-align:center">${name}</div>`,
+      className:'', iconAnchor:[30,8]
+    });
+    L.marker(center, {icon:label, interactive:false}).addTo(map);
+
+    rect.on('click', ()=>openPopup(name));
+    layers[name] = rect;
+  });
 }
-CONFIG_FILE = os.path.expanduser('~/.vroong_weather_region')
 
-# ── 색상 ───────────────────────────────────────────────────
-BG     = '#12161E'
-CARD   = '#141921'
-SEP    = '#1E2A38'
-GREEN  = '#05CD82'
-ORANGE = '#F97316'
-BLUE   = '#60A5FA'
-DIM    = '#4A5568'
-TEXT   = '#E2E8F0'
+function updateLayer(name, state){
+  const {fill, stroke} = getColor(state);
+  layers[name].setStyle({fillColor:fill, color:stroke});
+}
 
-# ── macOS 알림 ──────────────────────────────────────────────
-def mac_notify(title, message):
-    try:
-        script = f'display notification "{message}" with title "{title}" sound name "Ping"'
-        subprocess.run(['osascript', '-e', script], check=False)
-    except Exception:
-        pass
+async function fetchWeather(lat, lon){
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,apparent_temperature&timezone=Asia%2FSeoul`;
+  const res  = await fetch(url);
+  const data = await res.json();
+  const c = data.current;
+  const isRain = RAIN_CODES.has(c.weather_code) || c.precipitation>0;
+  return {
+    temp:c.temperature_2m, precip:c.precipitation,
+    humid:c.relative_humidity_2m, wind:c.wind_speed_10m,
+    code:c.weather_code, isRain,
+    surge: isRain || c.temperature_2m<=-5 || c.temperature_2m>=33,
+    label: CODE_LABELS[c.weather_code]||'알 수 없음',
+  };
+}
 
-# ── 날씨 fetch (Open-Meteo) ────────────────────────────────
-def fetch_weather(lat, lon):
-    url = (f'https://api.open-meteo.com/v1/forecast'
-           f'?latitude={lat}&longitude={lon}'
-           f'&current=temperature_2m,relative_humidity_2m,precipitation'
-           f',weather_code,wind_speed_10m,apparent_temperature'
-           f'&timezone=Asia%2FSeoul')
-    with urllib.request.urlopen(url, timeout=10) as r:
-        data = json.loads(r.read())
-    c       = data['current']
-    code    = c['weather_code']
-    temp    = c['temperature_2m']
-    precip  = c['precipitation']
-    humid   = c['relative_humidity_2m']
-    isRain  = code in RAIN_CODES or precip > 0
-    surge   = isRain or temp <= -5 or temp >= 33
-    return {
-        'temp': temp, 'precip': precip, 'humid': humid,
-        'code': code, 'isRain': isRain, 'surge': surge,
-        'label': CODE_LABELS.get(code, '알 수 없음'),
-    }
+async function loadAll(){
+  document.getElementById('update-time').textContent='불러오는 중...';
+  await Promise.allSettled(Object.entries(REGIONS).map(async([name,r])=>{
+    try{
+      const d = await fetchWeather(r.lat, r.lon);
+      weatherCache[name] = d;
+      updateLayer(name, d.surge?'on':'off');
+    }catch{ updateLayer(name,'loading'); }
+  }));
+  const now = new Date();
+  document.getElementById('update-time').textContent=`${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')} 업데이트`;
+  document.getElementById('loading').classList.add('done');
+}
 
-# ── 권역 선택 창 ───────────────────────────────────────────
-class RegionSelector:
-    def __init__(self, callback):
-        self.callback = callback
-        self.win = tk.Tk()
-        self.win.title('권역 선택')
-        self.win.configure(bg=BG)
-        self.win.geometry('360x480+100+100')
-        self.win.resizable(False, False)
-        self._build()
-        self.win.mainloop()
+function openPopup(name){
+  const d = weatherCache[name];
+  document.getElementById('popup-region').textContent = name;
+  if(!d){
+    document.getElementById('popup-badge').className='popup-badge off';
+    document.getElementById('popup-badge-title').textContent='데이터 없음';
+    document.getElementById('popup-badge-desc').textContent='새로고침 해주세요';
+  } else {
+    const badge = document.getElementById('popup-badge');
+    badge.className = 'popup-badge '+(d.surge?'on':'off');
+    document.getElementById('popup-badge-title').textContent = d.surge?'⚠️  기상할증 ON 권장':'✅  기상할증 OFF';
+    document.getElementById('popup-badge-desc').textContent  = d.surge
+      ?(d.isRain?`현재 강수 감지 (${Math.round(d.precip*10)/10}mm) — 할증 적용 권장`:`온도 기준 충족 (${d.temp}°C)`)
+      :'현재 강수 없음 · 할증 불필요';
+    document.getElementById('p-temp').textContent   = `${Math.round(d.temp*10)/10}°`;
+    document.getElementById('p-precip').textContent = `${Math.round(d.precip*10)/10}mm`;
+    document.getElementById('p-humid').textContent  = `${Math.round(d.humid)}%`;
+  }
+  document.getElementById('popup').classList.add('open');
+}
 
-    def _build(self):
-        tk.Label(self.win, text='담당 권역 선택', bg=BG, fg=TEXT,
-                 font=('Helvetica', 16, 'bold')).pack(pady=(20, 4))
-        tk.Label(self.win, text='한 번만 선택하면 저장돼요', bg=BG, fg=DIM,
-                 font=('Helvetica', 11)).pack(pady=(0, 16))
+function closePopup(){
+  document.getElementById('popup').classList.remove('open');
+}
 
-        teams = {
-            'LX1팀 — 서울': ['강남동부','강남서부','강북동부','강북서부'],
-            'LX2팀 — 경기': ['경기서부','경기남부','경기북부'],
-            'LX3팀 — 강원·충청·전라': ['강원충북','대전충남','광주전라'],
-            'LX4팀 — 부산·경남·대구': ['부경동부','부경서부','대구경북'],
-        }
-        scroll = tk.Frame(self.win, bg=BG)
-        scroll.pack(fill=tk.BOTH, expand=True, padx=16, pady=(0,16))
-
-        for team, parts in teams.items():
-            tk.Label(scroll, text=team, bg=BG, fg=DIM,
-                     font=('Helvetica', 10)).pack(anchor=tk.W, pady=(10,4))
-            row = tk.Frame(scroll, bg=BG)
-            row.pack(fill=tk.X, pady=(0,2))
-            for name in parts:
-                btn = tk.Button(row, text=name, bg=CARD, fg=TEXT,
-                                font=('Helvetica', 12), relief='flat',
-                                bd=0, padx=10, pady=8, cursor='hand2',
-                                command=lambda n=name: self._select(n))
-                btn.pack(side=tk.LEFT, padx=3)
-
-    def _select(self, name):
-        with open(CONFIG_FILE, 'w') as f:
-            f.write(name)
-        self.callback(name)
-        self.win.destroy()
-
-# ── 메인 위젯 ──────────────────────────────────────────────
-class WeatherWidget:
-    def __init__(self, region):
-        self.region = region
-        self.lat, self.lon = REGIONS[region]
-        self.last_surge = None
-        self.last_change = None
-        self._build()
-        self.root.after(500, self._fetch)
-        self.root.after(600000, self._timer_fetch)
-        self.root.mainloop()
-
-    def _timer_fetch(self):
-        self._fetch()
-        self.root.after(600000, self._timer_fetch)
-
-    def _build(self):
-        self.root = tk.Tk()
-        self.root.title('기상할증 알리미')
-        self.root.attributes('-topmost', True)
-        self.root.configure(bg=BG)
-        self.root.geometry('+60+60')
-        self.root.resizable(False, False)
-        self.root.bind('<Button-3>', lambda e: self.root.destroy())
-
-        # 드래그
-        self.root.bind('<ButtonPress-1>', lambda e: setattr(self, '_dx', e.x) or setattr(self, '_dy', e.y))
-        self.root.bind('<B1-Motion>', lambda e: self.root.geometry(f'+{self.root.winfo_x()+e.x-self._dx}+{self.root.winfo_y()+e.y-self._dy}'))
-
-        f = tk.Frame(self.root, bg=BG, padx=16, pady=14)
-        f.pack()
-
-        # 헤더
-        hdr = tk.Frame(f, bg=BG)
-        hdr.pack(fill=tk.X, pady=(0,10))
-        tk.Label(hdr, text='● 기상할증 알리미', bg=BG, fg=GREEN,
-                 font=('Helvetica', 11, 'bold')).pack(side=tk.LEFT)
-        tk.Label(hdr, text=self.region, bg=BG, fg=DIM,
-                 font=('Helvetica', 11)).pack(side=tk.RIGHT)
-
-        tk.Frame(f, bg=SEP, height=1).pack(fill=tk.X, pady=(0, 10))
-
-        # 상태 카드
-        self.card = tk.Frame(f, bg='#0A2A1A', bd=0, padx=12, pady=12)
-        self.card.pack(fill=tk.X, pady=(0,10))
-        self.lbl_icon   = tk.Label(self.card, text='🌥', bg='#0A2A1A', font=('Helvetica', 36))
-        self.lbl_icon.pack()
-        self.lbl_status = tk.Label(self.card, text='확인 중...', bg='#0A2A1A', fg=GREEN,
-                                   font=('Helvetica', 15, 'bold'))
-        self.lbl_status.pack(pady=(4,2))
-        self.lbl_sub    = tk.Label(self.card, text='', bg='#0A2A1A', fg=GREEN,
-                                   font=('Helvetica', 11))
-        self.lbl_sub.pack()
-        self.lbl_change = tk.Label(self.card, text='', bg='#0A2A1A', fg=DIM,
-                                   font=('Helvetica', 10))
-        self.lbl_change.pack(pady=(6,0))
-
-        tk.Frame(f, bg=SEP, height=1).pack(fill=tk.X, pady=(0,10))
-
-        # 수치
-        nums = tk.Frame(f, bg=BG)
-        nums.pack(fill=tk.X, pady=(0,10))
-        self.lbl_temp   = self._num(nums, '--°', '기온')
-        self.lbl_precip = self._num(nums, '--', '강수량')
-        self.lbl_humid  = self._num(nums, '--%', '습도')
-
-        # 푸터
-        self.lbl_footer = tk.Label(f, text='', bg=BG, fg='#2A3545',
-                                   font=('Helvetica', 9))
-        self.lbl_footer.pack()
-        tk.Label(f, text='우클릭 종료  •  드래그 이동', bg=BG, fg='#1E2A38',
-                 font=('Helvetica', 8)).pack(pady=(2,0))
-
-    def _num(self, parent, val, label):
-        cell = tk.Frame(parent, bg=CARD, padx=14, pady=8)
-        cell.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=3)
-        v = tk.Label(cell, text=val, bg=CARD, fg=TEXT, font=('Helvetica', 14, 'bold'))
-        v.pack()
-        tk.Label(cell, text=label, bg=CARD, fg=DIM, font=('Helvetica', 9)).pack()
-        return v
-
-    def _update(self, d):
-        surge   = d['surge']
-        isRain  = d['isRain']
-
-        # 상태 변화 감지 → macOS 알림
-        if self.last_surge is not None and self.last_surge != surge:
-            now_str = datetime.now().strftime('%H:%M')
-            self.last_change = now_str + (' 비 시작' if surge else ' 비 그침')
-            if surge:
-                mac_notify(f'☔ {self.region} — 비 시작', '기상할증 ON을 권장해요.')
-            else:
-                mac_notify(f'☀️ {self.region} — 비 그침', '기상할증 OFF를 검토해주세요.')
-        self.last_surge = surge
-
-        # 색상
-        if surge:
-            bg_c, fg_c = '#2A1A0A', ORANGE
-            icon = '⚠️'
-            st   = '기상할증 ON 권장'
-            sub  = f'비가 내리고 있어요 · {d["precip"]}mm/h' if isRain else f'온도 기준 ({d["temp"]}°C)'
-        else:
-            bg_c, fg_c = '#0A2A1A', GREEN
-            icon = '✅'
-            st   = '기상할증 OFF'
-            sub  = f'{d["label"]} · 할증 불필요'
-
-        self.card.configure(bg=bg_c)
-        for w in self.card.winfo_children():
-            w.configure(bg=bg_c)
-        self.lbl_icon.configure(text=icon)
-        self.lbl_status.configure(text=st, fg=fg_c)
-        self.lbl_sub.configure(text=sub, fg=fg_c)
-        if self.last_change:
-            self.lbl_change.configure(text=self.last_change)
-
-        self.lbl_temp.configure(text=f'{round(d["temp"],1)}°')
-        self.lbl_precip.configure(text=f'{round(d["precip"],1)}mm')
-        self.lbl_humid.configure(text=f'{round(d["humid"])}%')
-
-        now_str = datetime.now().strftime('%H:%M')
-        self.lbl_footer.configure(text=f'Open-Meteo · {now_str} 업데이트 · 10분 자동 갱신')
-
-    def _fetch(self):
-        def run():
-            try:
-                d = fetch_weather(self.lat, self.lon)
-                self.root.after(0, lambda: self._update(d))
-            except Exception as e:
-                self.root.after(0, lambda: self.lbl_status.configure(text=f'오류: {str(e)[:30]}'))
-        threading.Thread(target=run, daemon=True).start()
-
-    def _start_timer(self):
-        def loop():
-            while True:
-                time.sleep(600)
-                self._fetch()
-        threading.Thread(target=loop, daemon=True).start()
-
-
-# ── 실행 ───────────────────────────────────────────────────
-def start_widget(region):
-    WeatherWidget(region)
-
-if os.path.exists(CONFIG_FILE):
-    with open(CONFIG_FILE) as f:
-        saved = f.read().strip()
-    if saved in REGIONS:
-        start_widget(saved)
-    else:
-        RegionSelector(start_widget)
-else:
-    RegionSelector(start_widget)
+buildLayers();
+loadAll();
+setInterval(loadAll, 600000);
+</script>
+</body>
+</html>
